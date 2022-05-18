@@ -8,6 +8,7 @@ module.exports = {
 	plugins: ['react', 'prettier', 'react-hooks', '@typescript-eslint'],
 	rules: {
 		'import/extensions': 'off',
+		'react/jsx-props-no-spreading': 'off',
 		'react/react-in-jsx-scope': 0,
 		'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
 		'prettier/prettier': [
@@ -25,6 +26,14 @@ module.exports = {
 			},
 		],
 	},
+	overrides: [
+		{
+			files: ['*.ts', '*.tsx'],
+			rules: {
+				'no-undef': 'off',
+			},
+		},
+	],
 	settings: {
 		react: {
 			version: 'detect',

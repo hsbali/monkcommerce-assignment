@@ -1,7 +1,6 @@
 export default function themePalette() {
-    return {
-        // primary: {
-            
-        // },
-    }
+	return {
+		// primary: {
+		// },
+	};
 }
