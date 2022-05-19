@@ -1,11 +1,15 @@
 import { createTheme } from '@mui/material/styles';
-import type { ThemeOptions } from '@mui/material/styles';
+import type { ThemeOptions, Components } from '@mui/material/styles';
 
 import compStyleOverrides from './compStyleOverrides';
-import themePalette from './palette.js';
+import themePalette from './palette';
+
+interface ThemeOptionsWithCustomCompenents extends ThemeOptions {
+	components?: Components<any>;
+}
 
 const theme = () => {
-	const themeOptions: ThemeOptions = {
+	const themeOptions: ThemeOptionsWithCustomCompenents = {
 		direction: 'ltr',
 		palette: themePalette(),
 		typography: {
@@ -14,7 +18,7 @@ const theme = () => {
 	};
 
 	const themes = createTheme(themeOptions);
-	themes.components = compStyleOverrides(themeOptions.palette);
+	themes.components = compStyleOverrides(themes.palette);
 
 	return themes;
 };

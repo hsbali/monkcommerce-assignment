@@ -5,8 +5,8 @@ import DefaultLayout from '../components/layouts/DefaultLayout';
 import Loadable from '../components/loaders/Loadable';
 import TopLoader from '../components/loaders/TopLoader';
 
-const HomePage = Loadable(
-	lazy(() => import('../pages/HomePage')),
+const IndexPage = Loadable(
+	lazy(() => import('../pages/IndexPage')),
 	TopLoader
 );
 
@@ -18,7 +18,7 @@ const DefaultRoutes = {
 	children: [
 		{
 			path: '',
-			element: <HomePage />,
+			element: <IndexPage />,
 		},
 	],
 };

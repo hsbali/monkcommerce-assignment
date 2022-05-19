@@ -7,6 +7,9 @@ module.exports = {
 	extends: ['airbnb', 'plugin:react/recommended', 'prettier'],
 	plugins: ['react', 'prettier', 'react-hooks', '@typescript-eslint'],
 	rules: {
+		'no-unused-vars': 'off',
+		'@typescript-eslint/no-unused-vars': ['error'],
+		'react/require-default-props': 'off',
 		'import/extensions': 'off',
 		'react/jsx-props-no-spreading': 'off',
 		'react/react-in-jsx-scope': 0,

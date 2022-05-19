@@ -1,6 +1,7 @@
 export default function themePalette() {
 	return {
-		// primary: {
-		// },
+		primary: {
+			main: '#008060',
+		},
 	};
 }
