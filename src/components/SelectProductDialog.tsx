@@ -1,4 +1,4 @@
-import { useState, useEffect, Dispatch, SetStateAction, Fragment, ChangeEvent } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction, Fragment, ChangeEvent, useRef } from 'react';
 import axios from 'axios';
 
 import { styled } from '@mui/material/styles';
@@ -25,55 +25,6 @@ import useDebounce from '../hooks/useDebounce';
 
 import { IProduct, IVariant } from '../ts/databaseInterfaces';
 
-const STORE_PRODUCTS: IProduct[] = [
-	{
-		id: 77,
-		title: 'Fog Linen Chambray Towel - Beige Stripe',
-		variants: [
-			{
-				id: 1,
-				product_id: 77,
-				title: 'XS / Silver',
-				price: '49',
-			},
-			{
-				id: 2,
-				product_id: 77,
-				title: 'S / Silver',
-				price: '49',
-			},
-			{
-				id: 3,
-				product_id: 77,
-				title: 'M / Silver',
-				price: '49',
-			},
-		],
-		image: {
-			id: 266,
-			product_id: 77,
-			src: 'https://cdn11.bigcommerce.com/s-p1xcugzp89/products/77/images/266/foglinenbeigestripetowel1b.1647248662.386.513.jpg?c=1',
-		},
-	},
-	{
-		id: 80,
-		title: 'Orbit Terrarium - Large',
-		variants: [
-			{
-				id: 64,
-				product_id: 80,
-				title: 'Default Title',
-				price: '109',
-			},
-		],
-		image: {
-			id: 272,
-			product_id: 80,
-			src: 'https://cdn11.bigcommerce.com/s-p1xcugzp89/products/80/images/272/roundterrariumlarge.1647248662.386.513.jpg?c=1',
-		},
-	},
-];
-
 const ListItemButtonWithBorder = styled(ListItemButton)(({ theme }) => ({
 	borderBottom: `0.5px solid ${theme.palette.divider}`,
 })) as typeof ListItemButton;
@@ -85,10 +36,13 @@ type SelectProductDialogProps = {
 };
 
 export default function SelectProductDialog({ isOpen, setIsOpen, onAddSelectedProducts }: SelectProductDialogProps): JSX.Element {
+	const contentRef = useRef<HTMLElement | null>(null);
+
 	const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
 
 	const [searchTerm, setSearchTerm] = useState<string>('');
-	// const [results, setResults] = useState<IProduct[]>([]);
+	const [productPage, setProductPage] = useState<number>(1);
+	const [products, setProducts] = useState<IProduct[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -131,21 +85,35 @@ export default function SelectProductDialog({ isOpen, setIsOpen, onAddSelectedPr
 		setIsOpen(false);
 	};
 
-	useEffect(() => {
-		(async () => {
-			try {
-				setIsLoading(true);
-				const response = await axios.get(
-					`https://stageapibc.monkcommerce.app/admin/shop/product?search=${debouncedSearchTerm}&page=1`
-				);
+	// const handleContentScroll = (): void | undefined => {
+	// 	if (!contentRef.current) return;
 
-				console.log(response);
-				setIsLoading(false);
-			} catch (err: any) {
-				alert(err.message);
-			}
-		})();
-	}, [debouncedSearchTerm]);
+	// 	if (contentRef.current.scrollTop + contentRef.current.clientHeight >= contentRef.current.scrollHeight) {
+	// 		setProductPage((prev) => prev++);
+	// 	}
+	// };
+
+	useEffect(() => {
+		if (isOpen === true) {
+			(async () => {
+				try {
+					setIsLoading(true);
+					const response = await axios.get<IProduct[]>(
+						`https://stageapibc.monkcommerce.app/admin/shop/product?search=${debouncedSearchTerm}&page=${productPage}`
+					);
+
+					setProducts((prev) => [...prev, ...response.data]);
+					setIsLoading(false);
+				} catch (err: any) {
+					/* eslint-disable no-console */
+					console.error(err.message);
+					/* eslint-enable no-console */
+				}
+			})();
+		}
+
+		return () => setProducts([]);
+	}, [debouncedSearchTerm, isOpen]); // productPage
 
 	return (
 		<Dialog open={isOpen} fullWidth maxWidth="md" scroll="paper" onClose={(): void => setIsOpen(false)}>
@@ -161,7 +129,10 @@ export default function SelectProductDialog({ isOpen, setIsOpen, onAddSelectedPr
 				<TextField
 					fullWidth
 					value={searchTerm}
-					onChange={(e: ChangeEvent<HTMLInputElement>): void => setSearchTerm(e.target.value)}
+					onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+						setProductPage(1);
+						setSearchTerm(e.target.value);
+					}}
 					InputProps={{
 						startAdornment: (
 							<InputAdornment position="start">
@@ -171,80 +142,76 @@ export default function SelectProductDialog({ isOpen, setIsOpen, onAddSelectedPr
 					}}
 				/>
 			</Stack>
-			<DialogContent sx={{ p: 0 }}>
-				{isLoading ? (
+			<DialogContent sx={{ p: 0 }} ref={contentRef}>
+				{products && products.length !== 0 && (
+					<List disablePadding>
+						{products.map((prod) => {
+							const productLabelId = `product-${prod.id}`;
+
+							return (
+								<Fragment key={prod.id}>
+									<ListItem disablePadding>
+										<ListItemButtonWithBorder role={undefined} dense onClick={(): void => handleSelectProduct(prod)}>
+											<ListItemIcon sx={{ minWidth: 'fit-content' }}>
+												<Checkbox
+													checked={selectedProduct !== null && selectedProduct.id === prod.id}
+													indeterminate={
+														selectedProduct !== null &&
+														selectedProduct.id === prod.id &&
+														selectedProduct.variants.length !== prod.variants.length
+															? true
+															: undefined
+													}
+													disableRipple
+													inputProps={{ 'aria-labelledby': productLabelId }}
+												/>
+											</ListItemIcon>
+											<ListItemText id={productLabelId} primary={prod.title} />
+										</ListItemButtonWithBorder>
+									</ListItem>
+									<List disablePadding>
+										{prod.variants.length > 0 && prod.variants[0].title !== 'Default Title' ? (
+											<>
+												{prod.variants.map((variant) => {
+													const variantLabelId = `variant-${variant.id}`;
+
+													return (
+														<ListItem key={variant.id} disablePadding>
+															<ListItemButtonWithBorder
+																role={undefined}
+																dense
+																onClick={(): void => handleSelectVariant(variant, prod)}
+																sx={{ paddingLeft: 6 }}
+															>
+																<ListItemIcon sx={{ minWidth: 'fit-content' }}>
+																	<Checkbox
+																		checked={
+																			selectedProduct !== null &&
+																			selectedProduct.variants.some((x) => x.id === variant.id)
+																		}
+																		disableRipple
+																		inputProps={{ 'aria-labelledby': variantLabelId }}
+																	/>
+																</ListItemIcon>
+																<ListItemText id={variantLabelId} primary={variant.title} />
+															</ListItemButtonWithBorder>
+														</ListItem>
+													);
+												})}
+											</>
+										) : (
+											''
+										)}
+									</List>
+								</Fragment>
+							);
+						})}
+					</List>
+				)}
+				{isLoading && (
 					<Stack alignItems="center" py={4} sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
 						<CircularProgress />
 					</Stack>
-				) : (
-					<List disablePadding>
-						{STORE_PRODUCTS &&
-							STORE_PRODUCTS.map((prod) => {
-								const productLabelId = `product-${prod.id}`;
-
-								return (
-									<Fragment key={prod.id}>
-										<ListItem disablePadding>
-											<ListItemButtonWithBorder
-												role={undefined}
-												dense
-												onClick={(): void => handleSelectProduct(prod)}
-											>
-												<ListItemIcon sx={{ minWidth: 'fit-content' }}>
-													<Checkbox
-														checked={selectedProduct !== null && selectedProduct.id === prod.id}
-														indeterminate={
-															selectedProduct !== null &&
-															selectedProduct.id === prod.id &&
-															selectedProduct.variants.length !== prod.variants.length
-																? true
-																: undefined
-														}
-														disableRipple
-														inputProps={{ 'aria-labelledby': productLabelId }}
-													/>
-												</ListItemIcon>
-												<ListItemText id={productLabelId} primary={prod.title} />
-											</ListItemButtonWithBorder>
-										</ListItem>
-										<List disablePadding>
-											{prod.variants.length > 0 && prod.variants[0].title !== 'Default Title' ? (
-												<>
-													{prod.variants.map((variant) => {
-														const variantLabelId = `variant-${variant.id}`;
-
-														return (
-															<ListItem key={variant.id} disablePadding>
-																<ListItemButtonWithBorder
-																	role={undefined}
-																	dense
-																	onClick={(): void => handleSelectVariant(variant, prod)}
-																	sx={{ paddingLeft: 6 }}
-																>
-																	<ListItemIcon sx={{ minWidth: 'fit-content' }}>
-																		<Checkbox
-																			checked={
-																				selectedProduct !== null &&
-																				selectedProduct.variants.some((x) => x.id === variant.id)
-																			}
-																			disableRipple
-																			inputProps={{ 'aria-labelledby': variantLabelId }}
-																		/>
-																	</ListItemIcon>
-																	<ListItemText id={variantLabelId} primary={variant.title} />
-																</ListItemButtonWithBorder>
-															</ListItem>
-														);
-													})}
-												</>
-											) : (
-												''
-											)}
-										</List>
-									</Fragment>
-								);
-							})}
-					</List>
 				)}
 			</DialogContent>
 			<Stack direction="row" justifyContent="flex-end" px={2} py={1} spacing={1}>
