@@ -6,7 +6,7 @@ export interface IDiscount {
 }
 
 export interface IProductWithUid extends IProduct {
-	uid: string;
+	uid: number;
 }
 
 export interface IVariantWithDiscount extends IVariant {

@@ -6,11 +6,13 @@ import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-	<React.StrictMode>
+	/* eslint-disable react/jsx-no-useless-fragment */
+	<>
 		<BrowserRouter>
 			<App />
 		</BrowserRouter>
-	</React.StrictMode>
+	</>
+	/* eslint-disable react/jsx-no-useless-fragment */
 );
 
 // If you want to start measuring performance in your app, pass a function

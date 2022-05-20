@@ -6,13 +6,13 @@ import { Select, MenuItem, Grid, TextField, Box } from '@mui/material';
 import { IDiscount } from '../ts/appInterfaces';
 
 type EditDiscountProps = {
-	productUid?: string;
+	productUid?: number;
 	variantId?: number;
 	discountOn: 'product' | 'variant';
 	formValue: IDiscount;
 	children: JSX.Element;
-	onChangeProductDiscount?(productUid: string, { type, value }: IDiscount): void;
-	onChangeVariantDiscount?(productUid: string, variantId: number, { type, value }: IDiscount): void;
+	onChangeProductDiscount?(productUid: number, { type, value }: IDiscount): void;
+	onChangeVariantDiscount?(productUid: number, variantId: number, { type, value }: IDiscount): void;
 };
 
 export default function EditDiscount({ children, ...props }: EditDiscountProps): JSX.Element {
