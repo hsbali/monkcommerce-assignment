@@ -60,7 +60,7 @@ function VariantsSection({ product, onVariantRemove, onChangeVariantDiscount, se
 			<Grid item xs={3} mt={-1}>
 				<Stack direction="row" justifyContent="flex-end">
 					<LinkButton size="small" disableRipple onClick={(): void => setIsListVisible((prev) => !prev)}>
-						View/Hide Variants
+						{isListVisible ? 'Hide Variants' : 'Show Variants'}
 					</LinkButton>
 				</Stack>
 			</Grid>
@@ -184,9 +184,14 @@ export default function IndexPage(): JSX.Element {
 
 	return (
 		<Container maxWidth="md" sx={{ my: 4 }}>
-			<Typography component="h1" variant="h5" sx={{ fontWeight: 'bolder' }} mb={2}>
-				Add Products
-			</Typography>
+			<Stack direction="row" alignItems="center">
+				<Typography component="h1" variant="h5" sx={{ fontWeight: 'bolder' }} mb={2} flexGrow={1}>
+					Add Products
+				</Typography>
+				<Button variant="contained" onClick={(): void => console.log(selectedProducts)}>
+					Print Result in Console
+				</Button>
+			</Stack>
 			<Grid container columnSpacing={1} mb={2}>
 				<Grid item xs={8}>
 					<Typography component="h2" variant="h6">
@@ -228,7 +233,8 @@ export default function IndexPage(): JSX.Element {
 														<Typography>{i + 1}.</Typography>
 														<TextField
 															fullWidth
-															value={prod.title}
+															placeholder="Select Product"
+															value={prod.title !== '' ? prod.title : undefined}
 															InputProps={{
 																readOnly: true,
 																endAdornment: (
